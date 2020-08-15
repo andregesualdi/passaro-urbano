@@ -1,7 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { OrdemCompraService } from '../ordem-compra.service';
+import { Component, OnInit } from '@angular/core';
+import { OrdemCompraService } from '../ordem-compra.service'
 import { Pedido } from '../../shared/models/pedido.model';
-import { NgForm } from '@angular/forms';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-ordem-compra',
@@ -11,7 +11,12 @@ import { NgForm } from '@angular/forms';
 })
 export class OrdemCompraComponent implements OnInit {
 
-  @ViewChild('formulario') public form: NgForm; //Importa a variável de referência do template HTML
+  public formulario: FormGroup = new FormGroup({
+    'endereco': new FormControl(null, [ Validators.required, Validators.minLength(3), Validators.maxLength(120) ]),
+    'numero': new FormControl(null, [ Validators.required, Validators.minLength(1), Validators.maxLength(12) ]),
+    'complemento': new FormControl(null),
+    'formaPagamento': new FormControl(null,  [ Validators.required ])
+  });
   public idPedidoCompra: number;
 
   constructor(private ordemCompraService: OrdemCompraService) { }
@@ -21,8 +26,15 @@ export class OrdemCompraComponent implements OnInit {
   }
 
   public confirmarCompra(): void {
-    let pedido: Pedido = this.form.value as Pedido;
-    this.ordemCompraService.efetivarCompra(pedido)
-      .subscribe((idPedido: number) => this.idPedidoCompra = idPedido);
+    if (this.formulario.status === 'INVALID') {
+      this.formulario.get('endereco').markAsTouched();
+      this.formulario.get('numero').markAsTouched();
+      this.formulario.get('complemento').markAsTouched();
+      this.formulario.get('formaPagamento').markAsTouched();
+    } else {
+      let pedido: Pedido = this.formulario.value as Pedido;
+      this.ordemCompraService.efetivarCompra(pedido)
+        .subscribe((idPedido: number) => this.idPedidoCompra = idPedido);
+    }
   }
 }
